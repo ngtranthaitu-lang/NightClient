@@ -1,6 +1,8 @@
 package com.nightslayer.client;
 
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
@@ -22,12 +24,24 @@ public class NightClient implements ClientModInitializer {
     private final Deque<Long> clicks = new ArrayDeque<>();
     private boolean mouseWasDown;
     private boolean menuKeyWasDown;
+    private boolean openMenu;
     private int savedFov = -1;
 
     @Override
     public void onInitializeClient() {
         ClientTickEvents.END_CLIENT_TICK.register(this::onTick);
         HudRenderCallback.EVENT.register(this::onHud);
+
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
+            dispatcher.register(ClientCommandManager.literal("nc").executes(ctx -> {
+                openMenu = true;
+                return 1;
+            }));
+            dispatcher.register(ClientCommandManager.literal("nightclient").executes(ctx -> {
+                openMenu = true;
+                return 1;
+            }));
+        });
     }
 
     private boolean keyDown(MinecraftClient client, int key) {
@@ -37,6 +51,11 @@ public class NightClient implements ClientModInitializer {
     private void onTick(MinecraftClient client) {
         if (client.player == null) {
             return;
+        }
+
+        if (openMenu && client.currentScreen == null) {
+            openMenu = false;
+            client.setScreen(new MenuScreen());
         }
 
         boolean menuDown = keyDown(client, GLFW.GLFW_KEY_RIGHT_SHIFT);
