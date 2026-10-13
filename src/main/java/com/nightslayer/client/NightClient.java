@@ -8,10 +8,14 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayDeque;
@@ -96,11 +100,23 @@ public class NightClient implements ClientModInitializer {
         }
     }
 
+    private int count(ClientPlayerEntity player, Item item) {
+        int total = 0;
+        for (int i = 0; i < player.getInventory().size(); i++) {
+            ItemStack stack = player.getInventory().getStack(i);
+            if (stack.isOf(item)) {
+                total += stack.getCount();
+            }
+        }
+        return total;
+    }
+
     private void onHud(DrawContext context, Object tickCounter) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null || client.options.hudHidden) {
             return;
         }
+        ClientPlayerEntity p = client.player;
 
         int x = 6;
         int y = 6;
@@ -113,16 +129,30 @@ public class NightClient implements ClientModInitializer {
             line(context, client, "CPS: " + clicks.size(), x, y);
             y += 11;
         }
+        if (Modules.PING.isEnabled()) {
+            int ping = 0;
+            if (client.getNetworkHandler() != null) {
+                var entry = client.getNetworkHandler().getPlayerListEntry(p.getUuid());
+                if (entry != null) {
+                    ping = entry.getLatency();
+                }
+            }
+            line(context, client, "Ping: " + ping + " ms", x, y);
+            y += 11;
+        }
         if (Modules.COORDS.isEnabled()) {
-            ClientPlayerEntity p = client.player;
             line(context, client, String.format("XYZ: %.1f / %.1f / %.1f", p.getX(), p.getY(), p.getZ()), x, y);
+            y += 11;
+        }
+        if (Modules.DIRECTION.isEnabled()) {
+            line(context, client, "Huong: " + p.getHorizontalFacing().asString().toUpperCase(), x, y);
             y += 11;
         }
         if (Modules.ARMOR.isEnabled()) {
             EquipmentSlot[] slots = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
             String[] names = {"Mu", "Ao", "Quan", "Giay"};
             for (int i = 0; i < slots.length; i++) {
-                ItemStack stack = client.player.getEquippedStack(slots[i]);
+                ItemStack stack = p.getEquippedStack(slots[i]);
                 if (!stack.isEmpty() && stack.isDamageable()) {
                     int left = stack.getMaxDamage() - stack.getDamage();
                     line(context, client, names[i] + ": " + left + "/" + stack.getMaxDamage(), x, y);
@@ -130,13 +160,46 @@ public class NightClient implements ClientModInitializer {
                 }
             }
         }
+        if (Modules.TOTEMS.isEnabled()) {
+            line(context, client, "Totem: " + count(p, Items.TOTEM_OF_UNDYING)
+                    + "  Ngoc trai: " + count(p, Items.ENDER_PEARL), x, y);
+            y += 11;
+        }
+        if (Modules.TARGET.isEnabled()) {
+            Entity target = client.targetedEntity;
+            if (target instanceof LivingEntity living) {
+                String text = String.format("%s  %.0f/%.0f HP  %.1fm",
+                        living.getName().getString(), living.getHealth(), living.getMaxHealth(), p.distanceTo(living));
+                line(context, client, text, x, y);
+                y += 11;
+            }
+        }
         if (Modules.KEYSTROKES.isEnabled()) {
             drawKeystrokes(context, client, x, y + 4);
+        }
+
+        int cx = context.getScaledWindowWidth() / 2;
+        int cy = context.getScaledWindowHeight() / 2;
+
+        if (Modules.COOLDOWN.isEnabled()) {
+            float progress = p.getAttackCooldownProgress(0.0f);
+            int barW = 40;
+            int bx = cx - barW / 2;
+            int by = cy + 16;
+            context.fill(bx - 1, by - 1, bx + barW + 1, by + 4, 0x90000000);
+            int color = progress >= 1.0f ? Modules.accent() : 0xFFAAAAAA;
+            context.fill(bx, by, bx + (int) (barW * Math.min(progress, 1.0f)), by + 3, color);
+        }
+        if (Modules.LOWHP.isEnabled() && p.getHealth() <= 6.0f) {
+            String warn = "MAU THAP!";
+            int w = client.textRenderer.getWidth(warn);
+            context.drawTextWithShadow(client.textRenderer, warn, cx - w / 2, cy - 36, 0xFFFF4444);
         }
     }
 
     private void line(DrawContext context, MinecraftClient client, String text, int x, int y) {
         context.fill(x - 2, y - 2, x + client.textRenderer.getWidth(text) + 2, y + 9, 0x90000000);
+        context.fill(x - 2, y - 2, x - 1, y + 9, Modules.accent());
         context.drawTextWithShadow(client.textRenderer, text, x, y, TEXT);
     }
 
@@ -148,8 +211,8 @@ public class NightClient implements ClientModInitializer {
     }
 
     private void key(DrawContext context, MinecraftClient client, String label, boolean down, int x, int y) {
-        context.fill(x, y, x + 20, y + 20, down ? 0xC08B7CFF : 0x90000000);
+        context.fill(x, y, x + 20, y + 20, down ? Modules.accent() : 0x90000000);
         int tx = x + 10 - client.textRenderer.getWidth(label) / 2;
         context.drawTextWithShadow(client.textRenderer, label, tx, y + 6, down ? 0xFF000000 : TEXT);
     }
-}
+                     }
