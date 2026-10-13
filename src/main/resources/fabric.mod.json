@@ -4,7 +4,7 @@
   "version": "${version}",
   "name": "NightClient",
   "description": "Client mod.",
-  "authors": ["ngtranthai-lang"],
+  "authors": ["ngtranthaiu-lang"],
   "license": "MIT",
   "environment": "client",
   "entrypoints": {
