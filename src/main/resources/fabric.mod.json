@@ -1,19 +1,22 @@
 {
   "schemaVersion": 1,
-  "id": "nightclient",
+  "id": "zinhsaita",
   "version": "${version}",
-  "name": "NightClient",
-  "description": "Client mod.",
-  "authors": ["ngtranthaiu-lang"],
-  "license": "MIT",
+  "name": "Zinhsaita Client",
+  "description": "A lightweight client-side HUD, sprint utility and theme menu for Minecraft 1.21.11.",
+  "authors": [
+    "MrDon"
+  ],
   "environment": "client",
   "entrypoints": {
-    "client": ["com.night.nightclient.NightClient"]
+    "client": [
+      "com.zinhsaita.client.ZinhsaitaClient"
+    ]
   },
   "depends": {
     "fabricloader": ">=0.16.0",
-    "fabric-api": "*",
     "minecraft": "~1.21.11",
-    "java": ">=21"
+    "java": ">=21",
+    "fabric-api": "*"
   }
 }
