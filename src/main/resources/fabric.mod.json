@@ -1,17 +1,19 @@
 {
   "schemaVersion": 1,
   "id": "nightclient",
-  "version": "1.0.0",
-  "name": "Night Client",
-  "description": "HUD va tien ich hop le. Mo menu bang Right Shift.",
-  "authors": ["NightSlayer"],
+  "version": "${version}",
+  "name": "NightClient",
+  "description": "Client mod.",
+  "authors": ["ngtranthai-lang"],
+  "license": "MIT",
   "environment": "client",
   "entrypoints": {
-    "client": ["com.nightslayer.client.NightClient"]
+    "client": ["com.night.nightclient.NightClient"]
   },
   "depends": {
     "fabricloader": ">=0.16.0",
-    "minecraft": "~1.21",
-    "fabric-api": "*"
+    "fabric-api": "*",
+    "minecraft": "~1.21.11",
+    "java": ">=21"
   }
 }
