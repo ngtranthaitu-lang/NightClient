@@ -19,7 +19,6 @@ public class NightClient implements ClientModInitializer {
     public void onInitializeClient() {
         LOGGER.info("[NightClient] init");
 
-        // Right Shift để mở menu
         openMenuKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.nightclient.open_menu",
                 InputUtil.Type.KEYSYM,
